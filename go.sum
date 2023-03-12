@@ -4,8 +4,8 @@ github.com/disintegration/imaging v1.6.2 h1:w1LecBlG2Lnp8B3jk5zSuNqd7b4DXhcjwek1
 github.com/disintegration/imaging v1.6.2/go.mod h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=
 github.com/fsnotify/fsnotify v1.6.0 h1:n+5WquG0fcWoWp6xPWfHdbskMCQaFnG6PfBrh1Ky4HY=
 github.com/fsnotify/fsnotify v1.6.0/go.mod h1:sl3t1tCWJFWoRz9R8WJCbQihKKwmorjAbSClcnxKAGw=
-github.com/garfeng/go-tiled v0.11.1 h1:NWN1FoDmi2XMf83nOOMJzEjuvU1c5NIpyq0DtbQjoCQ=
-github.com/garfeng/go-tiled v0.11.1/go.mod h1:rS21/kfuECr26KkS09q6c3uUsRriTLZX+kdPVHM1QYY=
+github.com/garfeng/go-tiled v0.11.3 h1:xmo8q/VnatKJ63+LsCw9hS8XcsipnQ4QfyoHO196PIM=
+github.com/garfeng/go-tiled v0.11.3/go.mod h1:rS21/kfuECr26KkS09q6c3uUsRriTLZX+kdPVHM1QYY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=

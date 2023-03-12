@@ -18,15 +18,15 @@ import (
 )
 
 var (
-	mapRoot = flag.String("map", "./maps", "tiled map dir")
-	dstRoot = flag.String("dst", "./img/tilesets", "dst tilesets dir")
+	mapRoot       = flag.String("map", "./maps", "tiled map dir")
+	dstRoot       = flag.String("dst", "./img/tilesets", "dst tilesets dir")
+	separateGroup = flag.Bool("separateGroup", false, "generate groups into multiple pngs")
 )
 
 func main() {
 	flag.Parse()
 	ScanAndGenerateAll()
 	SetupMonitor()
-
 }
 
 func ScanAndGenerateAll() {
@@ -148,23 +148,35 @@ func renderOneMap(name string) {
 		return
 	}
 
+	if *separateGroup {
+		err = renderSeparateGroups(name, tiledMap)
+	} else {
+		err = renderAllGroups(name, tiledMap)
+	}
+
+	if err != nil {
+		log.Println("Err when render tilemap", name, err)
+	}
+}
+
+func renderAllGroups(name string, tiledMap *tiled.Map) error {
 	renderer, err := render.NewRenderer(tiledMap)
 	if err != nil {
 		log.Println("Err when create render", name, err)
-		return
+		return err
 	}
 
 	err = renderer.RenderVisibleLayersAndObjectGroups()
 	if err != nil {
 		log.Println("Err when render map", name, err)
-		return
+		return err
 	}
 
 	err = renderer.RenderVisibleGroups()
 
 	if err != nil {
 		log.Println("Err when render map", name, err)
-		return
+		return err
 	}
 	defer renderer.Clear()
 
@@ -173,19 +185,57 @@ func renderOneMap(name string) {
 	err = png.Encode(buffer, img)
 	if err != nil {
 		log.Println("Err when encode map to png", name, err)
-		return
+		return err
 	}
 
 	_, dstName := filepath.Split(name)
 	dstFullname := filepath.Join(*dstRoot, dstName)
 	dstFullname = ReplaceExtTo(dstFullname, ".png")
-	os.WriteFile(dstFullname, buffer.Bytes(), 0755)
+	err = os.WriteFile(dstFullname, buffer.Bytes(), 0755)
 
 	if err != nil {
 		log.Println("Err when save png", name, err)
-		return
+		return err
+	}
+	return nil
+}
+
+func renderSeparateGroups(name string, tiledMap *tiled.Map) error {
+	for idx := range tiledMap.Groups {
+		err := renderOneGroup(name, idx, tiledMap)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func renderOneGroup(name string, idx int, tiledMap *tiled.Map) error {
+	group := tiledMap.Groups[idx]
+
+	renderer, err := render.NewRenderer(tiledMap)
+	if err != nil {
+		return err
+	}
+	defer renderer.Clear()
+
+	err = renderer.RenderGroup(idx)
+	if err != nil {
+		return err
 	}
 
+	buffer := bytes.NewBuffer(nil)
+	err = renderer.SaveAsPng(buffer)
+	if err != nil {
+		return err
+	}
+
+	_, dstName := filepath.Split(name)
+	dstFullname := filepath.Join(*dstRoot, dstName)
+	dstFullname = ReplaceExtTo(dstFullname, fmt.Sprintf("_%s.png", group.Name))
+	err = os.WriteFile(dstFullname, buffer.Bytes(), 0755)
+
+	return err
 }
 
 func ReplaceExtTo(name string, newExt string) string {
