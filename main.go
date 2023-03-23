@@ -210,8 +210,21 @@ func renderSeparateGroups(name string, tiledMap *tiled.Map) error {
 	return nil
 }
 
+func SaveToPng(renderer *render.Renderer, name string) error {
+	buffer := bytes.NewBuffer(nil)
+	err := renderer.SaveAsPng(buffer)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(name, buffer.Bytes(), 0755)
+	return err
+}
+
 func renderOneGroup(name string, idx int, tiledMap *tiled.Map) error {
 	group := tiledMap.Groups[idx]
+
+	_, dstName := filepath.Split(name)
+	dstFullname := filepath.Join(*dstRoot, dstName)
 
 	renderer, err := render.NewRenderer(tiledMap)
 	if err != nil {
@@ -219,21 +232,53 @@ func renderOneGroup(name string, idx int, tiledMap *tiled.Map) error {
 	}
 	defer renderer.Clear()
 
-	err = renderer.RenderGroup(idx)
-	if err != nil {
-		return err
-	}
+	shouldSplitUpper := group.Properties.GetBool("splitHeight")
 
-	buffer := bytes.NewBuffer(nil)
-	err = renderer.SaveAsPng(buffer)
-	if err != nil {
-		return err
-	}
+	if !shouldSplitUpper {
+		// 整组渲染成一张图
+		err = renderer.RenderGroup(idx)
+		if err != nil {
+			return err
+		}
 
-	_, dstName := filepath.Split(name)
-	dstFullname := filepath.Join(*dstRoot, dstName)
-	dstFullname = ReplaceExtTo(dstFullname, fmt.Sprintf("_%s.png", group.Name))
-	err = os.WriteFile(dstFullname, buffer.Bytes(), 0755)
+		dstFullname = ReplaceExtTo(dstFullname, fmt.Sprintf("_%s.png", group.Name))
+		SaveToPng(renderer, dstFullname)
+
+	} else {
+		// 渲染图块层
+		layers := group.Layers
+		isRenderLayers := false
+		for i, layer := range layers {
+			if !layer.Visible {
+				continue
+			}
+			renderer.RenderGroupLayer(idx, i)
+			isRenderLayers = true
+		}
+		if isRenderLayers {
+			layerName := ReplaceExtTo(dstFullname, fmt.Sprintf("_%s_layer.png", group.Name))
+			SaveToPng(renderer, layerName)
+		}
+
+		// 渲染对象层，上下分开
+		objectGroups := group.ObjectGroups
+		for _, g := range objectGroups {
+			if !g.Visible {
+				continue
+			}
+
+			renderer.Clear()
+			renderer.RenderUpperObjectGroup(g)
+			upperName := ReplaceExtTo(dstFullname, fmt.Sprintf("_%s_%s_upper.png", group.Name, g.Name))
+			SaveToPng(renderer, upperName)
+
+			renderer.Clear()
+			renderer.RenderLowerObjectGroup(g)
+			lowerName := ReplaceExtTo(dstFullname, fmt.Sprintf("_%s_%s_lower.png", group.Name, g.Name))
+			SaveToPng(renderer, lowerName)
+		}
+
+	}
 
 	return err
 }

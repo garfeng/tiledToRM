@@ -4,5 +4,6 @@ import "testing"
 
 func TestRenderOneMap(t *testing.T) {
 	*dstRoot = "./tmp"
-	renderOneMap("C:/Users/jerri/Documents/RMMZ/XiuXian/maps/Test1.tmx")
+	*separateGroup = true
+	renderOneMap("C:/Users/jerri/Documents/RMMZ/XiuXian/maps/7.tmx")
 }
